@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { Card, CardContent } from "@/components/ui/card";
 import { ContactForm } from "@/features/marketing/contact-form";
-import { siteConfig } from "@/constants/site";
+import { getSiteSettings } from "@/services/settings";
 import { buildMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = buildMetadata({
@@ -13,9 +13,14 @@ export const metadata: Metadata = buildMetadata({
   path: "/contact",
 });
 
-const wa = `https://wa.me/${siteConfig.contact.whatsapp.replace(/\D/g, "")}`;
+// Reads live site settings from the DB — render per request so admin changes
+// appear immediately.
+export const dynamic = "force-dynamic";
 
-export default function ContactPage() {
+export default async function ContactPage() {
+  const settings = await getSiteSettings();
+  const wa = `https://wa.me/${settings.whatsapp.replace(/\D/g, "")}`;
+
   return (
     <div className="mx-auto max-w-6xl px-4 py-12 lg:px-8">
       <Breadcrumbs items={[{ title: "Contact" }]} />
@@ -37,26 +42,22 @@ export default function ContactPage() {
           <ContactRow
             icon={Phone}
             label="Call us"
-            value={siteConfig.contact.phone}
-            href={`tel:${siteConfig.contact.phone.replace(/\s/g, "")}`}
+            value={settings.phone}
+            href={`tel:${settings.phone.replace(/\s/g, "")}`}
           />
           <ContactRow
             icon={MessageCircle}
             label="WhatsApp"
-            value={siteConfig.contact.whatsapp}
+            value={settings.whatsapp}
             href={wa}
           />
           <ContactRow
             icon={Mail}
             label="Email"
-            value={siteConfig.contact.email}
-            href={`mailto:${siteConfig.contact.email}`}
+            value={settings.email}
+            href={`mailto:${settings.email}`}
           />
-          <ContactRow
-            icon={MapPin}
-            label="Address"
-            value={siteConfig.contact.address}
-          />
+          <ContactRow icon={MapPin} label="Address" value={settings.address} />
         </div>
       </div>
     </div>
