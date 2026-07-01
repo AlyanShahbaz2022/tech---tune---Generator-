@@ -20,9 +20,25 @@ import { prisma } from "@/lib/prisma";
  */
 const googleEnabled = Boolean(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET);
 
+/**
+ * Origins Better Auth will accept requests from. Includes the configured app
+ * URL plus the auto-provided Vercel deployment URL (VERCEL_URL) so both the
+ * production domain and per-branch preview deployments are trusted without
+ * hardcoding each one — otherwise requests fail with "Invalid origin".
+ */
+const trustedOrigins = [
+  env.BETTER_AUTH_URL,
+  env.NEXT_PUBLIC_APP_URL,
+  process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined,
+  process.env.VERCEL_PROJECT_PRODUCTION_URL
+    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+    : undefined,
+].filter((v): v is string => Boolean(v));
+
 export const auth = betterAuth({
   baseURL: env.BETTER_AUTH_URL ?? env.NEXT_PUBLIC_APP_URL,
   secret: env.BETTER_AUTH_SECRET,
+  trustedOrigins,
   database: prismaAdapter(prisma, { provider: "postgresql" }),
 
   emailAndPassword: {
